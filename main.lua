@@ -12,6 +12,7 @@ function love.load()
     textbox.y = window.height / 2 - textbox.height / 2
     textbox.selected = false
     textbox.content = ""
+    textbox.decimal = nil
 
     mouse = {}
     mouse.x = love.mouse.getX()
@@ -46,7 +47,7 @@ end
 function love.keypressed(key)
     if textbox.selected then
         if key == "backspace" then
-            textbox.content = string.sub(textbox.content, 1, -2)
+            textbox.content = string.sub(tostring(textbox.content), 1, -2)
         end
         if key == "return" then
             if star.mass == 0 then
@@ -82,23 +83,34 @@ function love.draw()
         love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",0,50)
         love.graphics.print("Radius: ".. string.format("%.3e", star.luminosity).."m",0,75)
         love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
-        love.graphics.print("Spectral Type: " .. star.class .. " / " .. getStarClass(star.radius, star.temp), 0, 125)
+        love.graphics.print("Spectral Type: " .. star.class, 0, 125)
     end
 end
 
 function love.textinput(t)
     if textbox.selected then
-        if t:match("%d") then
-        textbox.content = textbox.content .. t
-        if star.mass == 0 then
-            textbox.content = math.min(400, tonumber(textbox.content))
-        elseif planet.orbitradius == 0 then
-            textbox.content = math.min(999999999999, tonumber(textbox.content))
+        if t == "." then
+            if #tostring(textbox.content) == 0 or string.sub(tostring(textbox.content),1,1) == "0" then
+            textbox.content = "0" .. t
+            return
+            elseif tonumber(textbox.content) and (tonumber(textbox.content) == math.ceil(tonumber(textbox.content))) then
+                if string.sub(tostring(textbox.content),-1) ~= "." then
+                    textbox.content = tostring(textbox.content) .. "."
+                end
+                return
+            end
         end
-        textbox.content = tostring(textbox.content)
+        if tonumber(textbox.content .. t) then
+            textbox.content = textbox.content .. t
+            if star.mass == 0 then
+                textbox.content = math.min(400, tonumber(textbox.content))
+            elseif planet.orbitradius == 0 then
+                textbox.content = math.min(999999999999, tonumber(textbox.content))
+            end
         end
     end
 end
+
 function collision(string, obj1, obj2)
     if string == "point" then
         return (obj1.x >= obj2.x) and ((obj1.x - obj2.width) <= obj2.x) and (obj1.y >= obj2.y) and ((obj1.y - obj2.height) <= obj2.y)
