@@ -26,9 +26,12 @@ function love.load()
     star.temp = nil
     star.hzmin = nil
     star.hzmax = nil
+    star.lifetime = nil
+    star.fate = nil
 
     planet = {}
     planet.orbitradius = 0
+    planet.period = nil
 end
 
 function love.update()
@@ -45,6 +48,9 @@ function love.update()
 end
 
 function love.keypressed(key)
+    if key == "r" then
+        love.event.push("quit","restart",1)
+    end
     if textbox.selected then
         if key == "backspace" then
             textbox.content = string.sub(tostring(textbox.content), 1, -2)
@@ -56,8 +62,10 @@ function love.keypressed(key)
                 star.radius = (star.mass ^ 0.8) * 6.957e8
                 star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4)
                 star.class = specType(star.temp)
-                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.1)
-                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.53)
+                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7)
+                star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1)
+                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356)
+                star.lifetime = 10e9 * (star.mass ^ -2.5)
                 textbox.content = ""
             else
                 planet.orbitradius = tonumber(textbox.content)
@@ -85,6 +93,8 @@ function love.draw()
 
         love.graphics.setColor(0.7,0.7,0.2)
         love.graphics.circle("fill",window.width/2, window.height/2,star.hzmax*scale)
+        love.graphics.setColor(0.5,0.5,0.5)
+        love.graphics.circle("fill",window.width/2, window.height/2,star.hzcons*scale)
         love.graphics.setColor(0,0,0)
         love.graphics.circle("fill",window.width/2,window.height/2,star.hzmin*scale)
 
@@ -103,7 +113,13 @@ function love.draw()
         love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
         love.graphics.print("Spectral Type: " .. star.class, 0, 125)
         --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
-        
+        love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",0,150)
+        love.graphics.print("Period: " .. planet.period .. " years",0,175)
+        if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
+            love.graphics.print("Habitable!",window.width/2-30,0)
+        else
+            love.graphics.print("Not Habitable...",window.width/2-60,0)
+        end
     end
 end
 
@@ -132,8 +148,9 @@ function starColor(T)
 end
 
 function drawLogo()
-    logo=love.graphics.newImage("stargazer.png")
-    love.graphics.draw(logo,0,0,0,0.5)
+    local logo = love.graphics.newImage("stargazer.png")
+    local width,height = logo:getDimensions()
+    love.graphics.draw(logo,(window.width/2)-width/4,(window.height/2)-height/4 -200,0,0.5)
     --local x,y=0,0
     --local scale = 100
     --love.graphics.setColor(0.9,0.9,0.7)
