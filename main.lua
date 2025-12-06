@@ -56,6 +56,8 @@ function love.keypressed(key)
                 star.radius = (star.mass ^ 0.8) * 6.957e8
                 star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4)
                 star.class = specType(star.temp)
+                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.1)
+                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.53)
                 textbox.content = ""
             else
                 planet.orbitradius = tonumber(textbox.content)
@@ -84,9 +86,20 @@ function love.draw()
         love.graphics.print("Radius: ".. string.format("%.3e", star.luminosity).."m",0,75)
         love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
         love.graphics.print("Spectral Type: " .. star.class, 0, 125)
+        love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
+        love.graphics.circle("fill",window.width /2, window.height/2, 25)
+        love.graphics.circle("line",window.width/2,window.height/2,planet.orbitradius*40)
+        drawPlanet()
     end
 end
-
+function drawPlanet()
+local speed = 8
+planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
+local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
+local x = window.width/2 + math.cos(ang) * (planet.orbitradius*40)
+local y = window.height/2 + math.sin(ang) * (planet.orbitradius*40)
+love.graphics.circle("fill",x,y,6)
+end
 function love.textinput(t)
     if textbox.selected then
         if t == "." then
