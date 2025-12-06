@@ -3,7 +3,7 @@ function love.load()
     window = {}
     window.width = love.graphics.getWidth()
     window.height = love.graphics.getHeight()
-
+    scale = 0
     textbox = {}
     textbox.hidden = false
     textbox.width = 150
@@ -62,6 +62,7 @@ function love.keypressed(key)
             else
                 planet.orbitradius = tonumber(textbox.content)
                 textbox.content = ""
+                scale = (math.max(planet.orbitradius,star.hzmax) / (window.height/2.5))^-1
             end
         end
     end
@@ -80,6 +81,20 @@ function love.draw()
         love.graphics.print(textbox.content, textbox.x, textbox.y,0,1.5)
         love.graphics.circle("line",mouse.x, mouse.y,5)
     else
+
+        love.graphics.setColor(0.7,0.7,0.2)
+        love.graphics.circle("fill",window.width/2, window.height/2,star.hzmax*scale)
+        love.graphics.setColor(0,0,0)
+        love.graphics.circle("fill",window.width/2,window.height/2,star.hzmin*scale)
+
+        local r,g,b = starColor()
+        love.graphics.setColor(r,g,b)
+        love.graphics.circle("fill",window.width /2, window.height/2, scale/10)
+
+        love.graphics.setColor(1,1,1)
+        love.graphics.circle("line",window.width/2,window.height/2,planet.orbitradius*scale)
+        drawPlanet()
+
         love.graphics.print("Star:")
         love.graphics.print("Mass: " .. tostring(star.mass) .. " Solar Masses / " .. string.format("%.3e", star.mass * 1.98847e30) .."kg",0,25)
         love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",0,50)
@@ -87,19 +102,34 @@ function love.draw()
         love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
         love.graphics.print("Spectral Type: " .. star.class, 0, 125)
         love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
-        love.graphics.circle("fill",window.width /2, window.height/2, 25)
-        love.graphics.circle("line",window.width/2,window.height/2,planet.orbitradius*40)
-        drawPlanet()
+        
     end
 end
+
 function drawPlanet()
-local speed = 8
-planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
-local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
-local x = window.width/2 + math.cos(ang) * (planet.orbitradius*40)
-local y = window.height/2 + math.sin(ang) * (planet.orbitradius*40)
-love.graphics.circle("fill",x,y,6)
+    local speed = 8
+    planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
+    local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
+    local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
+    local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
+    love.graphics.circle("fill",x,y,scale/6)
 end
+
+function starColor(T)
+    local t = (tostring(star.class):sub(1,1)):upper()
+
+    if t == "O" then return 0.6,0.8,1
+    elseif t == "B" then return 0.7,0.8,1
+    elseif t == "A" then return 0.9,0.9,1
+    elseif t == "F" then return 1,1,0.9
+    elseif t == "G" then return 1,0.96,0.6
+    elseif t == "K" then return 1,0.75,0.4
+    elseif t == "M" then return 1,0.55,0.4
+    else
+        return 1,1,1
+    end
+end
+
 function love.textinput(t)
     if textbox.selected then
         if t == "." then
