@@ -1,3 +1,5 @@
+local love = require("love")
+
 function love.load()
     sigma = 5.67e-8
     window = {}
@@ -27,7 +29,7 @@ function love.load()
     star.hzmin = nil
     star.hzmax = nil
     star.lifetime = nil
-    star.fate = nil
+    --star.fate = nil
 
     planet = {}
     planet.orbitradius = 0
@@ -69,6 +71,8 @@ function love.keypressed(key)
                 textbox.content = ""
             else
                 planet.orbitradius = tonumber(textbox.content)
+                planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
+                planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
                 textbox.content = ""
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
             end
@@ -115,6 +119,7 @@ function love.draw()
         --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
         love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",0,150)
         love.graphics.print("Period: " .. planet.period .. " years",0,175)
+        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",0,200)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
             love.graphics.print("Habitable!",window.width/2-30,0)
         else
@@ -162,6 +167,10 @@ end
 
 function love.textinput(t)
     if textbox.selected then
+        if t == "0" then
+            textbox.content = tostring(tostring(textbox.content) .. "0")
+            return
+        end
         if t == "." then
             if #tostring(textbox.content) == 0 or string.sub(tostring(textbox.content),1,1) == "0" then
             textbox.content = "0" .. t
@@ -174,11 +183,11 @@ function love.textinput(t)
             end
         end
         if tonumber(textbox.content .. t) then
-            textbox.content = textbox.content .. t
+            textbox.content = tostring(textbox.content) .. t
             if star.mass == 0 then
-                textbox.content = math.min(400, tonumber(textbox.content))
+                textbox.content = tostring(math.min(400, tonumber(textbox.content)))
             elseif planet.orbitradius == 0 then
-                textbox.content = math.min(999999999999, tonumber(textbox.content))
+                textbox.content = tostring(math.min(999999999999, tonumber(textbox.content)))
             end
         end
     end
