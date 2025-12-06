@@ -62,7 +62,7 @@ function love.keypressed(key)
             else
                 planet.orbitradius = tonumber(textbox.content)
                 textbox.content = ""
-                scale = (math.max(planet.orbitradius,star.hzmax) / (window.height/2.5))^-1
+                scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
             end
         end
     end
@@ -77,6 +77,7 @@ function love.draw()
         textbox.hidden = true
     end
     if textbox.hidden == false then
+        drawLogo()
         love.graphics.rectangle("line",textbox.x, textbox.y, textbox.width, textbox.height)
         love.graphics.print(textbox.content, textbox.x, textbox.y,0,1.5)
         love.graphics.circle("line",mouse.x, mouse.y,5)
@@ -89,7 +90,7 @@ function love.draw()
 
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
-        love.graphics.circle("fill",window.width /2, window.height/2, scale/10)
+        love.graphics.circle("fill",window.width /2, window.height/2, math.max(10,(star.radius/6.957e8)*0.0005))
 
         love.graphics.setColor(1,1,1)
         love.graphics.circle("line",window.width/2,window.height/2,planet.orbitradius*scale)
@@ -101,7 +102,7 @@ function love.draw()
         love.graphics.print("Radius: ".. string.format("%.3e", star.luminosity).."m",0,75)
         love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
         love.graphics.print("Spectral Type: " .. star.class, 0, 125)
-        love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
+        --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
         
     end
 end
@@ -112,7 +113,7 @@ function drawPlanet()
     local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
-    love.graphics.circle("fill",x,y,scale/6)
+    love.graphics.circle("fill",x,y,8)
 end
 
 function starColor(T)
@@ -128,6 +129,18 @@ function starColor(T)
     else
         return 1,1,1
     end
+end
+
+function drawLogo()
+    logo=love.graphics.newImage("stargazer.png")
+    love.graphics.draw(logo,0,0,0,0.5)
+    --local x,y=0,0
+    --local scale = 100
+    --love.graphics.setColor(0.9,0.9,0.7)
+    --love.graphics.polygon("fill",x,y+(scale/2),x+(scale/2),y+(scale),x+(scale),y+(scale/2),x+(scale/2),y)
+    --love.graphics.setColor(1,1,1)
+    --love.graphics.rectangle("fill",x+(scale/8),y+(scale/8),(scale*0.75),(scale*0.75))
+    --love.graphics.print("STARGAZER",x+(scale),y+(scale/3),0,2.5)
 end
 
 function love.textinput(t)
