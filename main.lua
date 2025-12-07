@@ -1,12 +1,17 @@
 local love = require("love")
 
 function love.load()
+    --stefan-boltzmann constant
     sigma = 5.67e-8
+
     camx, camy = 0,0
+
     window = {}
     window.width = love.graphics.getWidth()
     window.height = love.graphics.getHeight()
+
     scale = 0
+
     textbox = {}
     textbox.hidden = false
     textbox.width = 150
@@ -35,12 +40,16 @@ function love.load()
     planet = {}
     planet.orbitradius = 0
     planet.period = nil
+
+    info = {}
+    info.x = 5
+    info.hidden = false
 end
 
 function love.update()
     mouse.x = love.mouse.getX()
     mouse.y = love.mouse.getY()
-
+    love.mouse.setVisible(false)
     if love.mouse.isDown(1) then
         if collision("point", mouse, textbox) then
             textbox.selected = true
@@ -60,6 +69,12 @@ function love.update()
     if love.keyboard.isDown('down') then
         camy = camy - 5
     end
+
+    if info.hidden == true and info.x > -350 then
+        info.x = info.x + ((-350) - info.x) / 10
+    elseif info.hidden == false and info.x < 5 then
+        info.x = info.x + (5 - info.x) / 10
+    end
 end
 
 function love.keypressed(key)
@@ -76,7 +91,7 @@ function love.keypressed(key)
                 star.luminosity = (star.mass ^ 3.5) * 3.828e26
                 star.radius = (star.mass ^ 0.8) * 6.957e8
                 star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4)
-                star.class = specType(star.temp)
+                star.class = specType(star.mass)
                 star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7)
                 star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1)
                 star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356)
@@ -90,6 +105,18 @@ function love.keypressed(key)
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
             end
         end
+    end
+    if key == "i" then
+        --if not info.hidden then
+        --    while info.x > -500 do
+        --        info.x = info.x - 5
+        --    end
+        --else
+        --    while info.x < 5 do
+        --        info.x = info.x + 5
+        --    end
+        --end
+        info.hidden = not info.hidden
     end
 end
 
@@ -114,41 +141,49 @@ function love.draw()
         drawLogo()
         love.graphics.rectangle("line",textbox.x, textbox.y, textbox.width, textbox.height)
         love.graphics.print(textbox.content, textbox.x, textbox.y,0,1.5)
-        love.graphics.circle("line",mouse.x, mouse.y,5)
     else
-
+        --draw habitable zone
         love.graphics.setColor(0.7,0.7,0.2)
         love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy,star.hzmax*scale)
         love.graphics.setColor(0.5,0.5,0.5)
         love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy,star.hzcons*scale)
         love.graphics.setColor(0,0,0)
         love.graphics.circle("fill",window.width/2 + camx,window.height/2 + camy,star.hzmin*scale)
-
+        --draw star
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
         love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005))
 
+        --draw planet
         love.graphics.setColor(1,1,1)
         love.graphics.circle("line",window.width/2 + camx,window.height/2 + camy,planet.orbitradius*scale)
         drawPlanet()
 
-        love.graphics.print("Star:")
-        love.graphics.print("Mass: " .. tostring(star.mass) .. " Solar Masses / " .. string.format("%.3e", star.mass * 1.98847e30) .."kg",0,25)
-        love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",0,50)
-        love.graphics.print("Radius: ".. string.format("%.3e", star.luminosity).."m",0,75)
-        love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",0,100)
-        love.graphics.print("Spectral Type: " .. star.class, 0, 125)
-        --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),0,150)
-        love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",0,150)
-        love.graphics.print("Period: " .. planet.period .. " years",0,175)
-        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",0,200)
-        love.graphics.print("Scale: " .. scale, 0,225)
+        --draw info
+        love.graphics.setColor(0,0,0)
+        love.graphics.rectangle("fill",info.x,0,300,350)
+        love.graphics.setColor(1,1,1)
+        love.graphics.print("Star:",info.x,0)
+        love.graphics.print("Mass: " .. tostring(star.mass) .. " Solar Masses / " .. string.format("%.3e", star.mass * 1.98847e30) .."kg",info.x,25)
+        love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",info.x,50)
+        love.graphics.print("Radius: ".. string.format("%.3e", star.luminosity).."m",info.x,75)
+        love.graphics.print("Temperature: " .. string.format("%.3e", star.temp).." Kelvin",info.x,100)
+        love.graphics.print("Spectral Type: " .. star.class, info.x, 125)
+        --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),info.x,150)
+        love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",info.x,150)
+        love.graphics.print("Period: " .. planet.period .. " years",info.x,175)
+        
+        love.graphics.print("Planet:",info.x,225)
+        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,250)
+        love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
-            love.graphics.print("Habitable!",window.width/2-30,0)
+            love.graphics.print("Habitable!",info.x,325,0,1.25)
         else
-            love.graphics.print("Not Habitable...",window.width/2-60,0)
+            love.graphics.print("Not Habitable...",info.x,325,1.25)
         end
     end
+
+    love.graphics.circle("line",mouse.x, mouse.y,5)
 end
 
 function drawPlanet()
@@ -165,9 +200,9 @@ function starColor(T)
 
     if t == "O" then return 0.6,0.8,1
     elseif t == "B" then return 0.7,0.8,1
-    elseif t == "A" then return 0.9,0.9,1
+    elseif t == "A" then return 0.8,0.8,1
     elseif t == "F" then return 1,1,0.9
-    elseif t == "G" then return 1,0.96,0.6
+    elseif t == "G" then return 1,0.96,0.8
     elseif t == "K" then return 1,0.75,0.4
     elseif t == "M" then return 1,0.55,0.4
     else
@@ -222,20 +257,20 @@ function collision(string, obj1, obj2)
     end
 end
 
-function specType(T)
+function specType(M)
     local classes = {
-        {type="O", min=30000, max=60000},
-        {type="B", min=10000, max=30000},
-        {type="A", min=7500,  max=10000},
-        {type="F", min=6000,  max=7500},
-        {type="G", min=5200,  max=6000},
-        {type="K", min=3700,  max=5200},
-        {type="M", min=2400,  max=3700},
+        {type="O", min=16, max=401},
+        {type="B", min=2.1, max=16},
+        {type="A", min=1.4,  max=2.1},
+        {type="F", min=1.04,  max=1.4},
+        {type="G", min=0.8,  max=1.04},
+        {type="K", min=0.45,  max=0.8},
+        {type="M", min=0,  max=0.45},
     }
 
     for _, c in ipairs(classes) do
-        if T >= c.min and T < c.max then
-            local frac = (c.max - T) / (c.max - c.min)
+        if M >= c.min and M < c.max then
+            local frac = (c.max - M) / (c.max - c.min)
             local subclass = math.floor(frac * 10)
             if subclass > 9 then subclass = 9 end
             if subclass < 0 then subclass = 0 end
@@ -243,8 +278,8 @@ function specType(T)
         end
     end
 
-    if T >= 60000 then return "O0" end
-    if T < 2400 then return "L?" end
+    if M >= 60000 then return "O0" end
+    if M < 2400 then return "L?" end
 
     return "?"
 end
