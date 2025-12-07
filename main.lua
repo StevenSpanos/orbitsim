@@ -2,6 +2,7 @@ local love = require("love")
 
 function love.load()
     sigma = 5.67e-8
+    camx, camy = 0,0
     window = {}
     window.width = love.graphics.getWidth()
     window.height = love.graphics.getHeight()
@@ -47,6 +48,18 @@ function love.update()
             textbox.selected = false
         end
     end
+    if love.keyboard.isDown("left") then
+        camx = camx + 5
+    end
+    if love.keyboard.isDown('right') then
+        camx = camx - 5
+    end
+    if love.keyboard.isDown('up') then
+        camy = camy + 5
+    end
+    if love.keyboard.isDown('down') then
+        camy = camy - 5
+    end
 end
 
 function love.keypressed(key)
@@ -80,6 +93,15 @@ function love.keypressed(key)
     end
 end
 
+function love.wheelmoved(x,y)
+    if y > 0 then
+        scale = scale * 1.025
+    elseif y < 0 then
+        scale = scale / 1.025
+    end
+    scale = math.abs(math.max((math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax)),scale))
+end
+
 function love.draw()
     if star.mass == 0 then
         love.graphics.print("Enter Star Mass (Solar Masses):",textbox.x, textbox.y-textbox.height)
@@ -96,18 +118,18 @@ function love.draw()
     else
 
         love.graphics.setColor(0.7,0.7,0.2)
-        love.graphics.circle("fill",window.width/2, window.height/2,star.hzmax*scale)
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy,star.hzmax*scale)
         love.graphics.setColor(0.5,0.5,0.5)
-        love.graphics.circle("fill",window.width/2, window.height/2,star.hzcons*scale)
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy,star.hzcons*scale)
         love.graphics.setColor(0,0,0)
-        love.graphics.circle("fill",window.width/2,window.height/2,star.hzmin*scale)
+        love.graphics.circle("fill",window.width/2 + camx,window.height/2 + camy,star.hzmin*scale)
 
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
-        love.graphics.circle("fill",window.width /2, window.height/2, math.max(10,(star.radius/6.957e8)*0.0005))
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005))
 
         love.graphics.setColor(1,1,1)
-        love.graphics.circle("line",window.width/2,window.height/2,planet.orbitradius*scale)
+        love.graphics.circle("line",window.width/2 + camx,window.height/2 + camy,planet.orbitradius*scale)
         drawPlanet()
 
         love.graphics.print("Star:")
@@ -120,6 +142,7 @@ function love.draw()
         love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",0,150)
         love.graphics.print("Period: " .. planet.period .. " years",0,175)
         love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",0,200)
+        love.graphics.print("Scale: " .. scale, 0,225)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
             love.graphics.print("Habitable!",window.width/2-30,0)
         else
@@ -134,7 +157,7 @@ function drawPlanet()
     local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
-    love.graphics.circle("fill",x,y,8)
+    love.graphics.circle("fill",x + camx,y + camy,8)
 end
 
 function starColor(T)
