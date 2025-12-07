@@ -172,6 +172,7 @@ function love.draw()
         love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy,star.hzcons*scale)
         love.graphics.setColor(0,0,0)
         love.graphics.circle("fill",window.width/2 + camx,window.height/2 + camy,star.hzmin*scale)
+        
         --draw star
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
@@ -218,7 +219,7 @@ function drawPlanet()
     local ang = ((love.timer.getTime() * speed) / (planet.period * time)) * (2*math.pi)
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
-    love.graphics.circle("fill",x + camx,y + camy,8)
+    love.graphics.circle("fill",x + camx,y + camy,5*scale/maxscale)
     if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x+camx,y=y+camy,width=50,height=50}) then
         planet.selected = true
     end
