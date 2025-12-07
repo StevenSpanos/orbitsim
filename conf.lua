@@ -1,5 +1,5 @@
 function love.conf(t)
-    t.window.title = "Stargazer"
+    t.window.title = "Stargazer - Habitability Simulator"
     t.window.width = 800
     t.window.height = 600
     t.version = "11.5"

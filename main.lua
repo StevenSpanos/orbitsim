@@ -219,7 +219,7 @@ end
 function drawPlanet()
     local time = 8
     planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
-    local ang = ((love.timer.getTime() * speed) / (planet.period * time)) * (2*math.pi)
+    local ang = ((love.timer.getTime()) / (planet.period * time)) * (2*math.pi)
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
     love.graphics.circle("fill",x + camx,y + camy,5*scale/maxscale)
