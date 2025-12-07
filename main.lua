@@ -40,6 +40,7 @@ function love.load()
     planet = {}
     planet.orbitradius = 0
     planet.period = nil
+    planet.selected = false
 
     info = {}
     info.x = 5
@@ -69,7 +70,9 @@ function love.update()
     if love.keyboard.isDown('down') then
         camy = camy - 5
     end
-
+    if planet.selected then
+        camx,camy = -planet.x + window.width/2,-planet.y + window.height/2
+    end
     if info.hidden == true and info.x > -350 then
         info.x = info.x + ((-350) - info.x) / 10
     elseif info.hidden == false and info.x < 5 then
@@ -106,6 +109,12 @@ function love.keypressed(key)
             end
         end
     end
+    if key == "escape" then
+            if planet.selected then
+                planet.selected = false
+                camx,camy = 0,0
+            end
+        end
     if key == "i" then
         --if not info.hidden then
         --    while info.x > -500 do
@@ -193,6 +202,10 @@ function drawPlanet()
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
     love.graphics.circle("fill",x + camx,y + camy,8)
+    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x,y=y,width=50,height=50}) then
+        planet.selected = true
+    end
+    planet.x,planet.y = x,y
 end
 
 function starColor(T)
