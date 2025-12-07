@@ -11,6 +11,8 @@ function love.load()
     window.height = love.graphics.getHeight()
 
     scale = 0
+    maxscale = 0
+    speed = 1
 
     textbox = {}
     textbox.hidden = false
@@ -58,16 +60,16 @@ function love.update()
             textbox.selected = false
         end
     end
-    if love.keyboard.isDown("left") then
+    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
         camx = camx + 5
     end
-    if love.keyboard.isDown('right') then
+    if love.keyboard.isDown('right') or love.keyboard.isDown("d") then
         camx = camx - 5
     end
-    if love.keyboard.isDown('up') then
+    if love.keyboard.isDown('up') or love.keyboard.isDown("w") then
         camy = camy + 5
     end
-    if love.keyboard.isDown('down') then
+    if love.keyboard.isDown('down') or love.keyboard.isDown("s") then
         camy = camy - 5
     end
     if planet.selected then
@@ -100,21 +102,24 @@ function love.keypressed(key)
                 star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356)
                 star.lifetime = 10e9 * (star.mass ^ -2.5)
                 textbox.content = ""
-            else
+            elseif planet.orbitradius == 0 then
                 planet.orbitradius = tonumber(textbox.content)
                 planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
                 planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
                 textbox.content = ""
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
+                maxscale = scale
+                camx,camy=0,0
             end
         end
     end
     if key == "escape" then
-            if planet.selected then
-                planet.selected = false
-                camx,camy = 0,0
-            end
+        if planet.selected then
+            planet.selected = false
         end
+        camx,camy = 0,0
+        scale = maxscale
+    end
     if key == "i" then
         --if not info.hidden then
         --    while info.x > -500 do
@@ -130,12 +135,21 @@ function love.keypressed(key)
 end
 
 function love.wheelmoved(x,y)
-    if y > 0 then
-        scale = scale * 1.025
-    elseif y < 0 then
-        scale = scale / 1.025
+    if love.keyboard.isDown("lctrl") then
+        --if y > 0 then
+        --    speed = speed * 1.025
+        --elseif y < 0 then
+        --    speed = speed / 1.025
+        --end
+        --speed = math.max(1e-100,math.min(speed, 100))
+    else
+        if y > 0 then
+            scale = scale * 1.025
+        elseif y < 0 then
+            scale = scale / 1.025
+        end
+        scale = math.abs(math.max((math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax)),scale))
     end
-    scale = math.abs(math.max((math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax)),scale))
 end
 
 function love.draw()
@@ -161,7 +175,7 @@ function love.draw()
         --draw star
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
-        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005))
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005) * (scale / maxscale))
 
         --draw planet
         love.graphics.setColor(1,1,1)
@@ -170,8 +184,9 @@ function love.draw()
 
         --draw info
         love.graphics.setColor(0,0,0)
-        love.graphics.rectangle("fill",info.x,0,300,350)
+        love.graphics.rectangle("fill",info.x-5,0,305,350)
         love.graphics.setColor(1,1,1)
+        love.graphics.rectangle("line",info.x-5,0,305,350)
         love.graphics.print("Star:",info.x,0)
         love.graphics.print("Mass: " .. tostring(star.mass) .. " Solar Masses / " .. string.format("%.3e", star.mass * 1.98847e30) .."kg",info.x,25)
         love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",info.x,50)
@@ -186,23 +201,25 @@ function love.draw()
         love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,250)
         love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
-            love.graphics.print("Habitable!",info.x,325,0,1.25)
+            love.graphics.print("Habitable!",info.x,325,0,0,1.25)
         else
-            love.graphics.print("Not Habitable...",info.x,325,1.25)
+            love.graphics.print("Not Habitable...",info.x,325,0,1.25)
         end
+        love.graphics.print(tostring(math.floor((scale/maxscale * 100)*1000)/1000) .. "%", 0,window.height-30)
+        love.graphics.print(tostring(math.floor(speed*1000)/1000) .. "x", 0,window.height-15)
     end
 
     love.graphics.circle("line",mouse.x, mouse.y,5)
 end
 
 function drawPlanet()
-    local speed = 8
+    local time = 8
     planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
-    local ang = (love.timer.getTime() / (planet.period * speed)) * (2*math.pi)
+    local ang = ((love.timer.getTime() * speed) / (planet.period * time)) * (2*math.pi)
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
     love.graphics.circle("fill",x + camx,y + camy,8)
-    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x,y=y,width=50,height=50}) then
+    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x+camx,y=y+camy,width=50,height=50}) then
         planet.selected = true
     end
     planet.x,planet.y = x,y
