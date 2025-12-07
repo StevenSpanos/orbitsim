@@ -84,7 +84,9 @@ end
 
 function love.keypressed(key)
     if key == "r" then
-        love.event.push("quit","restart",1)
+        --love.event.push("quit","restart",1)
+        star.mass, planet.orbitradius = 0,0
+        textbox.hidden = false
     end
     if textbox.selected then
         if key == "backspace" then
@@ -196,13 +198,14 @@ function love.draw()
         love.graphics.print("Spectral Type: " .. star.class, info.x, 125)
         --love.graphics.print("Habitable Zone: [".. star.hzmin .. ",".. star.hzmax .. "]" .. " , " .. tostring(planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax),info.x,150)
         love.graphics.print("Lifetime: " .. string.format("%.3e",tostring(star.lifetime)) .. " years",info.x,150)
-        love.graphics.print("Period: " .. planet.period .. " years",info.x,175)
         
-        love.graphics.print("Planet:",info.x,225)
-        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,250)
-        love.graphics.print("Scale: " .. scale, info.x,275)
+        love.graphics.print("Planet:",info.x,200)
+        love.graphics.print("Orbit Radius: " .. planet.orbitradius .. " AU / " .. string.format("%.3e", planet.orbitradius * 1.495979e8) .. "km",info.x,225)
+        love.graphics.print("Period: " .. planet.period .. " years",info.x,250)
+        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,275)
+        --love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
-            love.graphics.print("Habitable!",info.x,325,0,0,1.25)
+            love.graphics.print("Habitable!",info.x,325,0,1.25)
         else
             love.graphics.print("Not Habitable...",info.x,325,0,1.25)
         end
@@ -220,7 +223,7 @@ function drawPlanet()
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
     love.graphics.circle("fill",x + camx,y + camy,5*scale/maxscale)
-    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x+camx,y=y+camy,width=50,height=50}) then
+    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x+camx,y=y+camy,width=50*(scale/maxscale),height=50*(scale/maxscale)}) then
         planet.selected = true
     end
     planet.x,planet.y = x,y
