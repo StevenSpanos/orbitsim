@@ -115,8 +115,8 @@ function love.keypressed(key)
                 textbox.content = ""
             elseif planet.orbitradius == 0 then
                 planet.orbitradius = tonumber(textbox.content)
-                planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
-                planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
+                planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4)
+                planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e+11)^3))^(1/4)
                 planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30)))
                 --planet.mass = (4 * math.pi^2 * ((planet.orbitradius * 1.495979e11)^3)) / (6.67e-11 * planet.period^2)
                 textbox.content = ""
@@ -199,7 +199,7 @@ function love.draw()
         --draw star
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
-        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005) * (scale / maxscale))
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/6.957e8)*0.0005* (scale / maxscale)))
 
         --draw planet
         love.graphics.setColor(1,1,1)
@@ -223,7 +223,7 @@ function love.draw()
         love.graphics.print("Planet:",info.x,200)
         love.graphics.print("Orbit Radius: " .. planet.orbitradius .. " AU / " .. string.format("%.3e", planet.orbitradius * 1.495979e8) .. "km",info.x,225)
         love.graphics.print("Period: " .. planet.period .. " years",info.x,250)
-        love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,275)
+        love.graphics.print("Temperature: [" .. string.format("%.2e", tostring(planet.tempmin)) .. ", " .. string.format("%.2e", tostring(planet.tempmax * 32 - 273.15)) .. "] Celsius",info.x,275)
         --love.graphics.print("Mass: " .. string.format("%.3e", planet.mass) .. "kg",info.x,300)
         --love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
@@ -232,7 +232,7 @@ function love.draw()
             love.graphics.print("Not Habitable...",info.x,325,0,1.25)
         end
         love.graphics.print(tostring(math.floor((scale/maxscale * 100)*1000)/1000) .. "%", 0,window.height-30)
-        --love.graphics.print(tostring(math.floor(speed*1000)/1000) .. "x", 0,window.height-15)
+        love.graphics.print(tostring((math.min(window.width, window.height) * 0.9 / 2) / (math.max(planet.orbitradius,star.hzmax) * maxscale/scale)) .. " km per px", 0,window.height-15)
         if info.expanded then
             love.graphics.setColor(0,0,0)
             love.graphics.rectangle("fill",0,0,window.width,window.height)
@@ -243,7 +243,12 @@ function love.draw()
             printInfo("Star Radius: \n The radius of the star, or how large it is. Calculated with mass.\n Stars range greatly in radius, or size, so it is important to know the radius of a star. \n ",210)
             printInfo("Star Temperature: \n How bright the star is, in Kelvin. \n Kelvin is commonly used in Astronomy and other sciences due to the fact that 0K is absolute zero, or the lowest possible temperature something can be, making it easy to calculate certain things.",260)
             printInfo("Spectral Type: \n Most stars are classified under the following letters: O, B, A, F, G, K, and M \n Each letter is subdivided with a number, with 0 being the hottest and 9 being the coolest (ex. A0, K9). \n O-class stars are the hottest, being over 33,000K, with a mass greater than 16x the sun. \n These stars tend to be light blue in color. \n The coolest stars are M-class, being orange-red, and are less than half the mass of the Sun. \n Our sun is G-class, and is yellow or yellow-white.",340)
-            printInfo("Lifetime: \n ",470)
+            printInfo("Lifetime: \n A star's lifetime is dependent on it's mass, as it burns hydrogen to fuel it's fire, and the larger the star, the more pressure on the core, resulting in more hydrogen getting burned, which shorten's its lifespan. \n When stars have minimal mass, it doesn't glow as much since there isn't a lot of pressure on its core, so less hydrogen is fused into helium.",470)
+            printInfo("Habitable Zone: \n A star's habitable zone is proportional to its luminosity, as the brighter a star burns, the more heat it will emit, and therefore there will be a higher possibility for liquid water, since it won't be too hot that the water evaporates, or too cold so that it freezes. \n This isn't the only way to determine habitability, but it is a very accurate way to find out.",560)
+            printInfo("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. \n In actuality, a planet's orbit is an ellipse rather than a circle, and its velocity changes throughout the orbit. \n A planet's orbit radius can be used to find Period and Temperature, which is defined later.",650)
+            printInfo("Planet Period: \n A planet's period is defined by the amount of time it takes (in this case, measured in years) to orbit around its star. \n This period is important to know because if a planet was in a habitable zone, a period that was too large could meant that the planet actually isn't habitable, since there's a chance that it rotates too slowly, so if the planet were at a tilt, in such a way as the Earth, season would be too long, and certain parts of the planet would be abnormally hot or abnormally cold, depending on the seasons.",740)
+            printInfo("Planet Temperature: \n A planet's temperature is the average temperature of the planet as it orbits around it's star. This is dependent on planet albedo, which is not possible to find using just orbit radius, so instead I present the temperature as a range. That is why it presents Earth's temperature as a range from 10 million to -200 degrees Celsius. \n Albedo can be found using the amount of light a planet reflects from the sun, but that sadly is not possible with the information required by my project.",860)
+            
         end
     end
     love.graphics.setColor(1,1,1)
