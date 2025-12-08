@@ -232,7 +232,7 @@ function love.draw()
             love.graphics.print("Not Habitable...",info.x,325,0,1.25)
         end
         love.graphics.print(tostring(math.floor((scale/maxscale * 100)*1000)/1000) .. "%", 0,window.height-30)
-        love.graphics.print(tostring((math.min(window.width, window.height) * 0.9 / 2) / (math.max(planet.orbitradius,star.hzmax) * maxscale/scale)) .. " km per px", 0,window.height-15)
+        love.graphics.print(tostring((math.max(planet.orbitradius,star.hzmax) * 1.496e8 * maxscale/scale) / (math.min(window.width, window.height) * 0.9 / 2)) .. " km per px", 0,window.height-15)
         if info.expanded then
             love.graphics.setColor(0,0,0)
             love.graphics.rectangle("fill",0,0,window.width,window.height)
