@@ -46,7 +46,11 @@ function love.load()
 
     info = {}
     info.x = 5
+    info.y = 0
+    info.width = 305
+    info.height = 350
     info.hidden = false
+    info.expanded = false
 end
 
 function love.update()
@@ -58,6 +62,11 @@ function love.update()
             textbox.selected = true
         else
             textbox.selected = false
+        end
+
+        if collision("point",mouse,info) then
+            camx,camy = 0,0
+            info.expanded = true
         end
     end
     if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
@@ -119,6 +128,9 @@ function love.keypressed(key)
         if planet.selected then
             planet.selected = false
         end
+        if info.expanded then
+            info.expanded = false
+        end
         camx,camy = 0,0
         scale = maxscale
     end
@@ -144,6 +156,13 @@ function love.wheelmoved(x,y)
         --    speed = speed / 1.025
         --end
         --speed = math.max(1e-100,math.min(speed, 100))
+    elseif info.expanded then
+        if y > 0 then
+            camy = camy + 10
+        elseif y < 0 then
+            camy = camy - 10
+        end
+        camy = math.max(-1000,math.min(camy,5))
     else
         if y > 0 then
             scale = scale * 1.025
@@ -210,12 +229,27 @@ function love.draw()
             love.graphics.print("Not Habitable...",info.x,325,0,1.25)
         end
         love.graphics.print(tostring(math.floor((scale/maxscale * 100)*1000)/1000) .. "%", 0,window.height-30)
-        love.graphics.print(tostring(math.floor(speed*1000)/1000) .. "x", 0,window.height-15)
+        --love.graphics.print(tostring(math.floor(speed*1000)/1000) .. "x", 0,window.height-15)
+        if info.expanded then
+            love.graphics.setColor(0,0,0)
+            love.graphics.rectangle("fill",0,0,window.width,window.height)
+            love.graphics.setColor(1,1,1)
+            love.graphics.print("What does this mean?",0,camy,0,1.5)
+            printInfo("Star mass: \n This is the mass of the star, in solar units \n Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. \n By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it.",30)
+            printInfo("Star luminosity: \n This is how bright a star is, measured in Watts.\n Usually, it is also measured in comparison with the Sun, but I felt the need to have it shown in it's full, bright (pun intended) glory.\n A lot can be found using a star's luminosity, such as it's temperature, habitable zone, and more.",120)
+            printInfo("Star Radius: \n The radius of the star, or how large it is. Calculated with mass.\n Stars range greatly in radius, or size, so it is important to know the radius of a star. \n ",210)
+            printInfo("Star Temperature: \n How bright the star is, in Kelvin. \n Kelvin is commonly used in Astronomy and other sciences due to the fact that 0K is absolute zero, or the lowest possible temperature something can be, making it easy to calculate certain things.",260)
+            printInfo("Spectral Type: \n Most stars are classified under the following letters: O, B, A, F, G, K, and M \n Each letter is subdivided with a number, with 0 being the hottest and 9 being the coolest (ex. A0, K9). \n O-class stars are the hottest, being over 33,000K, with a mass greater than 16x the sun. \n These stars tend to be light blue in color. \n The coolest stars are M-class, being orange-red, and are less than half the mass of the Sun. \n Our sun is G-class, and is yellow or yellow-white.",340)
+            printInfo("Lifetime: \n ",470)
+        end
     end
-
+    love.graphics.setColor(1,1,1)
     love.graphics.circle("line",mouse.x, mouse.y,5)
 end
 
+function printInfo(s,x)
+    love.graphics.printf(s,0,camy+x,window.width/1.25,"left",0,1.1)
+end
 function drawPlanet()
     local time = 8
     planet.period = math.sqrt(planet.orbitradius^3 / (star.mass))
