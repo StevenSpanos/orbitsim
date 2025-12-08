@@ -117,6 +117,8 @@ function love.keypressed(key)
                 planet.orbitradius = tonumber(textbox.content)
                 planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
                 planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * planet.orbitradius^3))^(1/4)
+                planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30)))
+                --planet.mass = (4 * math.pi^2 * ((planet.orbitradius * 1.495979e11)^3)) / (6.67e-11 * planet.period^2)
                 textbox.content = ""
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
                 maxscale = scale
@@ -222,6 +224,7 @@ function love.draw()
         love.graphics.print("Orbit Radius: " .. planet.orbitradius .. " AU / " .. string.format("%.3e", planet.orbitradius * 1.495979e8) .. "km",info.x,225)
         love.graphics.print("Period: " .. planet.period .. " years",info.x,250)
         love.graphics.print("Temperature: [" .. string.format("%.3e", tostring(planet.tempmin)) .. ", " .. string.format("%.3e", tostring(planet.tempmax)) .."] Celsius",info.x,275)
+        --love.graphics.print("Mass: " .. string.format("%.3e", planet.mass) .. "kg",info.x,300)
         --love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
             love.graphics.print("Habitable!",info.x,325,0,1.25)
