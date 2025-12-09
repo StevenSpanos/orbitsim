@@ -14,6 +14,7 @@ function love.load()
     maxscale = 0
     speed = 1
 
+    --acts as an object
     textbox = {}
     textbox.hidden = false
     textbox.width = 150
@@ -28,6 +29,7 @@ function love.load()
     mouse.x = love.mouse.getX()
     mouse.y = love.mouse.getY()
 
+    --set everything to nil except star mass. could've set it as nil but didn't.
     star = {}
     star.mass = 0
     star.luminosity = nil
@@ -44,31 +46,35 @@ function love.load()
     planet.period = nil
     planet.selected = false
 
+    --info box that shows upp
     info = {}
     info.x = 5
     info.y = 0
     info.width = 305
     info.height = 350
-    info.hidden = false
-    info.expanded = false
+    info.hidden = false --whether or not its off the screen
+    info.expanded = false --the big info box
 end
 
 function love.update()
     mouse.x = love.mouse.getX()
     mouse.y = love.mouse.getY()
     love.mouse.setVisible(false)
+
     if love.mouse.isDown(1) then
-        if collision("point", mouse, textbox) then
+        if collision("point", mouse, textbox) then --mouse selects textbox
             textbox.selected = true
         else
             textbox.selected = false
         end
 
-        if collision("point",mouse,info) then
+        if collision("point",mouse,info) then --mouse selects infobox
             camx,camy = 0,0
             info.expanded = true
         end
     end
+
+    --panning camera
     if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
         camx = camx + 5
     end
@@ -81,9 +87,13 @@ function love.update()
     if love.keyboard.isDown('down') or love.keyboard.isDown("s") then
         camy = camy - 5
     end
+
+    --sets the camera to the planet if selected
     if planet.selected then
         camx,camy = -planet.x + window.width/2,-planet.y + window.height/2
     end
+
+    --moves the info box so it looks cool when closing or opening
     if info.hidden == true and info.x > -350 then
         info.x = info.x + ((-350) - info.x) / 10
     elseif info.hidden == false and info.x < 5 then
@@ -92,11 +102,14 @@ function love.update()
 end
 
 function love.keypressed(key)
+    --restarts the app
     if key == "r" then
         --love.event.push("quit","restart",1)
         star.mass, planet.orbitradius = 0,0
         textbox.hidden = false
     end
+
+    --textbox stuff
     if textbox.selected then
         if key == "backspace" then
             textbox.content = string.sub(tostring(textbox.content), 1, -2)
@@ -104,20 +117,21 @@ function love.keypressed(key)
         if key == "return" then
             if star.mass == 0 then
                 star.mass = tonumber(textbox.content)
-                star.luminosity = (star.mass ^ 3.5) * 3.828e26
-                star.radius = (star.mass ^ 0.8) * 6.957e8
-                star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4)
+                star.luminosity = (star.mass ^ 3.5) * 3.828e26 --luminosity is proportional to mass ^ 3.5, times the luminosity of the Sun
+                star.radius = (star.mass ^ 0.8) * 6.957e8 --radius is proportional to mass ^ 0.5, times radius of the Sun
+                star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4) --rearranged Stefan-Boltzmann Law, L = 4 * pi * r^2 * sigma * T^2
                 star.class = specType(star.mass)
-                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7)
-                star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1)
-                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356)
-                star.lifetime = 10e9 * (star.mass ^ -2.5)
+                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7) --minimum habitable zone
+                star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1) --conservative habitable zone
+                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356) --maximum habitable zone
+                star.lifetime = 10e9 * (star.mass ^ -2.5) --lifetime is proportional to mass ^ -2.5, multiplied by lifetime of the Sun
                 textbox.content = ""
             elseif planet.orbitradius == 0 then
-                planet.orbitradius = tonumber(textbox.content)
-                planet.tempmin = ((1-0.9)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4)
-                planet.tempmax =  ((1-0)*(star.luminosity / 3.828e26)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e+11)^3))^(1/4)
-                planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30)))
+                planet.orbitradius = tonumber(textbox.content) -- solar constant
+                local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
+                planet.tempmin = ((1-0.9)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation. Planetary Energy Balance Equation.
+                planet.tempmax =  ((1-0)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation again.
+                planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30))) --Kepler's 3rd Law - P^2 = a^3
                 --planet.mass = (4 * math.pi^2 * ((planet.orbitradius * 1.495979e11)^3)) / (6.67e-11 * planet.period^2)
                 textbox.content = ""
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
@@ -126,6 +140,7 @@ function love.keypressed(key)
             end
         end
     end
+
     if key == "escape" then
         if planet.selected then
             planet.selected = false
@@ -164,7 +179,7 @@ function love.wheelmoved(x,y)
         elseif y < 0 then
             camy = camy - 10
         end
-        camy = math.max(-1000,math.min(camy,5))
+        camy = math.max(-750,math.min(camy,5))
     else
         if y > 0 then
             scale = scale * 1.025
@@ -249,7 +264,7 @@ function love.draw()
             printInfo("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. \n In actuality, a planet's orbit is an ellipse rather than a circle, and its velocity changes throughout the orbit. \n A planet's orbit radius can be used to find Period and Temperature, which is defined later.",650)
             printInfo("Planet Period: \n A planet's period is defined by the amount of time it takes (in this case, measured in years) to orbit around its star. \n This period is important to know because if a planet was in a habitable zone, a period that was too large could meant that the planet actually isn't habitable, since there's a chance that it rotates too slowly, so if the planet were at a tilt, in such a way as the Earth, season would be too long, and certain parts of the planet would be abnormally hot or abnormally cold, depending on the seasons.",740)
             printInfo("Planet Temperature: \n A planet's temperature is the average temperature of the planet as it orbits around it's star. This is dependent on planet albedo, which is not possible to find using just orbit radius, so instead I present the temperature as a range. That is why it presents Earth's temperature as a range from 10 million to -200 degrees Celsius. \n Albedo can be found using the amount of light a planet reflects from the sun, but that sadly is not possible with the information required by my project.",860)
-
+            printInfo("Stefan-Boltzmann Constant: \n The Stefan-Boltzmann Constant is used in the Stefan-Boltzmann Law, which says that an ideal emitter (such as a star) has a proportionality of M = s * T^4, M being mass, s being the Stefan-Boltzmann Constant, and T being Temperature.",990)
         end
     end
     love.graphics.setColor(1,1,1)
