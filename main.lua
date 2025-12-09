@@ -116,17 +116,20 @@ function love.keypressed(key)
         end
         if key == "return" then
             if star.mass == 0 then
-                star.mass = tonumber(textbox.content)
-                star.luminosity = (star.mass ^ 3.5) * 3.828e26 --luminosity is proportional to mass ^ 3.5, times the luminosity of the Sun
-                star.radius = (star.mass ^ 0.8) * 6.957e8 --radius is proportional to mass ^ 0.5, times radius of the Sun
-                star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4) --rearranged Stefan-Boltzmann Law, L = 4 * pi * r^2 * sigma * T^2
-                star.class = specType(star.mass)
-                star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7) --minimum habitable zone
-                star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1) --conservative habitable zone
-                star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356) --maximum habitable zone
-                star.lifetime = 10e9 * (star.mass ^ -2.5) --lifetime is proportional to mass ^ -2.5, multiplied by lifetime of the Sun
-                textbox.content = ""
+                if tonumber(textbox.content) ~= nil then
+                    star.mass = tonumber(textbox.content)
+                    star.luminosity = (star.mass ^ 3.5) * 3.828e26 --luminosity is proportional to mass ^ 3.5, times the luminosity of the Sun
+                    star.radius = (star.mass ^ 0.8) * 6.957e8 --radius is proportional to mass ^ 0.5, times radius of the Sun
+                    star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4) --rearranged Stefan-Boltzmann Law, L = 4 * pi * r^2 * sigma * T^2
+                    star.class = specType(star.mass)
+                    star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7) --minimum habitable zone
+                    star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1) --conservative habitable zone
+                    star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356) --maximum habitable zone
+                    star.lifetime = 10e9 * (star.mass ^ -2.5) --lifetime is proportional to mass ^ -2.5, multiplied by lifetime of the Sun
+                    textbox.content = ""
+                end
             elseif planet.orbitradius == 0 then
+                if tonumber(textbox.content) ~= nil then
                 planet.orbitradius = tonumber(textbox.content) -- solar constant
                 local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
                 planet.tempmin = ((1-0.9)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation. Planetary Energy Balance Equation.
@@ -134,9 +137,11 @@ function love.keypressed(key)
                 planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30))) --Kepler's 3rd Law - P^2 = a^3
                 --planet.mass = (4 * math.pi^2 * ((planet.orbitradius * 1.495979e11)^3)) / (6.67e-11 * planet.period^2)
                 textbox.content = ""
+
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
                 maxscale = scale
                 camx,camy=0,0
+                end
             end
         end
     end
