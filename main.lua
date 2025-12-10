@@ -219,7 +219,7 @@ function love.draw()
         --draw star
         local r,g,b = starColor()
         love.graphics.setColor(r,g,b)
-        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/1.496e9)* (scale / maxscale)))
+        love.graphics.circle("fill",window.width/2 + camx, window.height/2 + camy, math.max(10,(star.radius/1.496e11)* (scale)))
 
         --draw planet
         love.graphics.setColor(1,1,1)
