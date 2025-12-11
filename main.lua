@@ -196,12 +196,13 @@ function love.wheelmoved(x,y)
 end
 
 function love.draw()
+    --love.graphics.line(window.width/2,0,window.width/2,window.height)
     if star.mass == 0 then
         love.graphics.print("Enter Star Mass (Solar Masses):",textbox.x, textbox.y-textbox.height)
-        love.graphics.printf("Star mass: \n This is the mass of the star, in solar units Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it. 1 Solar Unit is equivalent to the mass of the Sun.",textbox.x*0.35,textbox.y+textbox.height*5,textbox.width*2.5,"center",0,1.5)
+        love.graphics.printf("Star mass: \n This is the mass of the star, in solar units Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it. 1 Solar Unit is equivalent to the mass of the Sun.",(window.width-365)/2,textbox.y+textbox.height*5,300,"center",0,1.25)
     elseif planet.orbitradius == 0 then
         love.graphics.print("Enter Planet Orbital Radius (AU)", textbox.x, textbox.y-textbox.height)
-        love.graphics.printf("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. This is measured in AU, which is equivalent to the distance from the Earth to the Sun. As with star masses, this is because planet orbit radii can get rather large, so it's easier to measure it based off of something similar.",textbox.x*0.35,textbox.y+textbox.height*5,textbox.width*2.5,"center",0,1.5)
+        love.graphics.printf("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. This is measured in AU, which is equivalent to the distance from the Earth to the Sun. As with star masses, this is because planet orbit radii can get rather large, so it's easier to measure it based off of something similar.",(window.width-365)/2,textbox.y+textbox.height*5,300,"center",0,1.25)
     else
         textbox.hidden = true
     end
