@@ -198,8 +198,10 @@ end
 function love.draw()
     if star.mass == 0 then
         love.graphics.print("Enter Star Mass (Solar Masses):",textbox.x, textbox.y-textbox.height)
+        love.graphics.printf("Star mass: \n This is the mass of the star, in solar units Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it. 1 Solar Unit is equivalent to the mass of the Sun.",textbox.x*0.35,textbox.y+textbox.height*5,textbox.width*2.5,"center",0,1.5)
     elseif planet.orbitradius == 0 then
         love.graphics.print("Enter Planet Orbital Radius (AU)", textbox.x, textbox.y-textbox.height)
+        love.graphics.printf("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. This is measured in AU, which is equivalent to the distance from the Earth to the Sun. As with star masses, this is because planet orbit radii can get rather large, so it's easier to measure it based off of something similar.",textbox.x*0.35,textbox.y+textbox.height*5,textbox.width*2.5,"center",0,1.5)
     else
         textbox.hidden = true
     end
@@ -259,7 +261,7 @@ function love.draw()
             love.graphics.setColor(1,1,1)
             love.graphics.print("What does this mean?",0,camy,0,1.5)
 
-            printInfo("Star mass: \n This is the mass of the star, in solar units \n Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. \n By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it.",30)
+            printInfo("Star mass: \n This is the mass of the star, in solar units \n Astronomers use Solar Masses as a unit of measurement for stars, since masses can get really large. \n By using solar masses, it makes it easier to not only visualize how a star might look like, but also simplify numbers so there aren't a ton of numbers with 30 zeros trailing it. 1 Solar Unit is equivalent to the mass of the Sun.",30)
             printInfo("Star luminosity: \n This is how bright a star is, measured in Watts.\n Usually, it is also measured in comparison with the Sun, but I felt the need to have it shown in it's full, bright (pun intended) glory.\n A lot can be found using a star's luminosity, such as it's temperature, habitable zone, and more.",120)
             printInfo("Star Radius: \n The radius of the star, or how large it is. Calculated with mass.\n Stars range greatly in radius, or size, so it is important to know the radius of a star. \n ",210)
             printInfo("Star Temperature: \n How bright the star is, in Kelvin. \n Kelvin is commonly used in Astronomy and other sciences due to the fact that 0K is absolute zero, or the lowest possible temperature something can be, making it easy to calculate certain things.",260)
