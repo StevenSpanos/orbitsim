@@ -1,6 +1,9 @@
 local love = require("love")
 
 function love.load()
+    Object = require "classic"
+    require "ui"
+
     --stefan-boltzmann constant
     sigma = 5.67e-8
 
@@ -14,16 +17,9 @@ function love.load()
     maxscale = 0
     speed = 1
 
-    --acts as an object
-    textbox = {}
-    textbox.hidden = false
-    textbox.width = 150
-    textbox.height = 25
-    textbox.x = window.width / 2 - textbox.width / 2
-    textbox.y = window.height / 2 - textbox.height / 2
-    textbox.selected = false
-    textbox.content = ""
-    textbox.decimal = nil
+    textbox = UI(window.width/2 - 150/2,window.height/2 - 25/2, 150, 25,"textbox")
+
+    info = UI(5,0,305,350)
 
     mouse = {}
     mouse.x = love.mouse.getX()
@@ -44,16 +40,10 @@ function love.load()
     planet = {}
     planet.orbitradius = 0
     planet.period = nil
+    planet.mass = -1
     planet.selected = false
 
-    --info box that shows upp
-    info = {}
-    info.x = 5
-    info.y = 0
-    info.width = 305
-    info.height = 350
-    info.hidden = false --whether or not its off the screen
-    info.expanded = false --the big info box
+    buttons = {}
 end
 
 function love.update()
@@ -104,9 +94,7 @@ end
 function love.keypressed(key)
     --restarts the app
     if key == "r" then
-        --love.event.push("quit","restart",1)
-        star.mass, planet.orbitradius = 0,0
-        textbox.hidden = false
+        love.event.push("quit","restart",1)
     end
 
     --textbox stuff
@@ -141,7 +129,17 @@ function love.keypressed(key)
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
                 maxscale = scale
                 camx,camy=0,0
+
+                textbox.hidden = true
+                UI(window.width-55,5,50,50,"button").subID = "add"
                 end
+            elseif planet.mass == -1 and not textbox.hidden then
+                planet.mass = tonumber(textbox.content)
+                scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
+                maxscale = scale
+                camx,camy=0,0
+
+                textbox.hidden = true
             end
         end
     end
@@ -195,6 +193,34 @@ function love.wheelmoved(x,y)
     end
 end
 
+function love.textinput(t)
+    if textbox.selected then
+        if t == "0" then
+            textbox.content = tostring(tostring(textbox.content) .. "0")
+            return
+        end
+        if t == "." then
+            if #tostring(textbox.content) == 0 or string.sub(tostring(textbox.content),1,1) == "0" then
+            textbox.content = "0" .. t
+            return
+            elseif tonumber(textbox.content) and (tonumber(textbox.content) == math.ceil(tonumber(textbox.content))) then
+                if string.sub(tostring(textbox.content),-1) ~= "." then
+                    textbox.content = tostring(textbox.content) .. "."
+                end
+                return
+            end
+        end
+        if tonumber(textbox.content .. t) then
+            textbox.content = tostring(textbox.content) .. t
+            if star.mass == 0 then
+                textbox.content = tostring(math.min(400, tonumber(textbox.content)))
+            elseif planet.orbitradius == 0 then
+                textbox.content = tostring(math.min(999999999999, tonumber(textbox.content)))
+            end
+        end
+    end
+end
+
 function love.draw()
     --love.graphics.line(window.width/2,0,window.width/2,window.height)
     if star.mass == 0 then
@@ -203,8 +229,9 @@ function love.draw()
     elseif planet.orbitradius == 0 then
         love.graphics.print("Enter Planet Orbital Radius (AU)", textbox.x, textbox.y-textbox.height)
         love.graphics.printf("Planet Orbit Radius: \n A planet's orbit radius is defined by the average distance from the planet to the star. This is measured in AU, which is equivalent to the distance from the Earth to the Sun. As with star masses, this is because planet orbit radii can get rather large, so it's easier to measure it based off of something similar.",(window.width-365)/2,textbox.y+textbox.height*5,300,"center",0,1.25)
-    else
-        textbox.hidden = true
+    elseif planet.mass == -1 and not textbox.hidden then
+        love.graphics.print("Enter Planet Mass (Earth Masses)", textbox.x, textbox.y-textbox.height)
+        love.graphics.printf("Planet Mass: \n Planet Mass is how heavy the planet is. This is measured in Earth Masses, which is the weight of the Earth. This is due to the fact that planets can get really big, and it makes it easier to track things by using Earth Masses.",(window.width-365)/2,textbox.y+textbox.height*5,300,"center",0,1.25)
     end
     if textbox.hidden == false then
         drawLogo()
@@ -230,10 +257,16 @@ function love.draw()
         drawPlanet()
 
         --draw info
+        local h = 0
+        if planet.mass == -1 then
+            h = 350
+        else
+            h = 500
+        end
         love.graphics.setColor(0,0,0)
-        love.graphics.rectangle("fill",info.x-5,0,305,350)
-        love.graphics.setColor(1,1,1)
-        love.graphics.rectangle("line",info.x-5,0,305,350)
+            love.graphics.rectangle("fill",info.x-5,0,305,h)
+            love.graphics.setColor(1,1,1)
+            love.graphics.rectangle("line",info.x-5,0,305,h)
         love.graphics.print("Star:",info.x,0)
         love.graphics.print("Mass: " .. tostring(star.mass) .. " Solar Masses / " .. string.format("%.3e", star.mass * 1.98847e30) .."kg",info.x,25)
         love.graphics.print("Luminosity: " .. string.format("%.3e", star.luminosity) .. " Watts",info.x,50)
@@ -273,6 +306,13 @@ function love.draw()
             printInfo("Planet Period: \n A planet's period is defined by the amount of time it takes (in this case, measured in years) to orbit around its star. \n This period is important to know because if a planet was in a habitable zone, a period that was too large could meant that the planet actually isn't habitable, since there's a chance that it rotates too slowly, so if the planet were at a tilt, in such a way as the Earth, season would be too long, and certain parts of the planet would be abnormally hot or abnormally cold, depending on the seasons.",740)
             printInfo("Planet Temperature: \n A planet's temperature is the average temperature of the planet as it orbits around it's star. This is dependent on planet albedo, which is not possible to find using just orbit radius, so instead I present the temperature as a range. That is why it presents Earth's temperature as a range from 10 million to -200 degrees Celsius. \n Albedo can be found using the amount of light a planet reflects from the sun, but that sadly is not possible with the information required by my project.",860)
             printInfo("Stefan-Boltzmann Constant: \n The Stefan-Boltzmann Constant is used in the Stefan-Boltzmann Law, which says that an ideal emitter (such as a star) has a proportionality of M = s * T^4, M being mass, s being the Stefan-Boltzmann Constant, and T being Temperature.",990)
+        end
+    end
+
+    for i,b in ipairs(buttons) do
+        b:draw()
+        if love.mouse.isDown(1) and collision("point",mouse,b) then
+            b:press()
         end
     end
     love.graphics.setColor(1,1,1)
@@ -321,34 +361,6 @@ function drawLogo()
     --love.graphics.setColor(1,1,1)
     --love.graphics.rectangle("fill",x+(scale/8),y+(scale/8),(scale*0.75),(scale*0.75))
     --love.graphics.print("STARGAZER",x+(scale),y+(scale/3),0,2.5)
-end
-
-function love.textinput(t)
-    if textbox.selected then
-        if t == "0" then
-            textbox.content = tostring(tostring(textbox.content) .. "0")
-            return
-        end
-        if t == "." then
-            if #tostring(textbox.content) == 0 or string.sub(tostring(textbox.content),1,1) == "0" then
-            textbox.content = "0" .. t
-            return
-            elseif tonumber(textbox.content) and (tonumber(textbox.content) == math.ceil(tonumber(textbox.content))) then
-                if string.sub(tostring(textbox.content),-1) ~= "." then
-                    textbox.content = tostring(textbox.content) .. "."
-                end
-                return
-            end
-        end
-        if tonumber(textbox.content .. t) then
-            textbox.content = tostring(textbox.content) .. t
-            if star.mass == 0 then
-                textbox.content = tostring(math.min(400, tonumber(textbox.content)))
-            elseif planet.orbitradius == 0 then
-                textbox.content = tostring(math.min(999999999999, tonumber(textbox.content)))
-            end
-        end
-    end
 end
 
 function collision(string, obj1, obj2)
