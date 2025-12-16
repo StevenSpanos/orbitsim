@@ -41,6 +41,11 @@ function love.load()
     planet.orbitradius = 0
     planet.period = nil
     planet.mass = -1
+    planet.radius = nil
+    planet.escvel = nil
+    planet.hillr = nil
+    planet.flux = nil
+
     planet.selected = false
 
     buttons = {}
@@ -135,6 +140,8 @@ function love.keypressed(key)
                 end
             elseif planet.mass == -1 and not textbox.hidden then
                 planet.mass = tonumber(textbox.content)
+                planet.radius = ((planet.mass) ^ 0.27) * 6.37e6
+                planet.escvel = ((2 * 6.67e-11 * (planet.mass * 5.97e24))/planet.radius) ^ 0.5
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
                 maxscale = scale
                 camx,camy=0,0
@@ -280,12 +287,17 @@ function love.draw()
         love.graphics.print("Orbit Radius: " .. planet.orbitradius .. " AU / " .. string.format("%.3e", planet.orbitradius * 1.495979e8) .. "km",info.x,225)
         love.graphics.print("Period: " .. planet.period .. " years",info.x,250)
         love.graphics.print("Temperature: [" .. string.format("%.2e", tostring(planet.tempmin)) .. ", " .. string.format("%.2e", tostring(planet.tempmax * 32 - 273.15)) .. "] Celsius",info.x,275)
+        if planet.mass ~= -1 then
+            love.graphics.print("Mass: " .. planet.mass * 5.97e24 .. " kg",info.x,300)
+            love.graphics.print("Radius: " .. planet.radius .. " m",info.x,325)
+            love.graphics.print("Escape Velocity: " .. planet.escvel .. " m/s",info.x,350)
+        end
         --love.graphics.print("Mass: " .. string.format("%.3e", planet.mass) .. "kg",info.x,300)
         --love.graphics.print("Scale: " .. scale, info.x,275)
         if planet.orbitradius > star.hzmin and planet.orbitradius < star.hzmax then
-            love.graphics.print("Habitable!",info.x,325,0,1.25)
+            love.graphics.print("Habitable!",info.x,h-25,0,1.25)
         else
-            love.graphics.print("Not Habitable...",info.x,325,0,1.25)
+            love.graphics.print("Not Habitable...",info.x,h-25,0,1.25)
         end
         love.graphics.print(tostring(math.floor((scale/maxscale * 100)*1000)/1000) .. "%", 0,window.height-30)
         love.graphics.print(tostring((math.max(planet.orbitradius,star.hzmax) * 1.496e8 * maxscale/scale) / (math.min(window.width, window.height) * 0.9 / 2)) .. " km per px", 0,window.height-15)
