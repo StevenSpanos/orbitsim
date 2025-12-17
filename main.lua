@@ -6,7 +6,7 @@ function love.load()
 
     --stefan-boltzmann constant
     sigma = 5.67e-8
-
+    boltz = 1.38e-23
     camx, camy = 0,0
 
     window = {}
@@ -43,8 +43,11 @@ function love.load()
     planet.mass = -1
     planet.radius = nil
     planet.escvel = nil
+    planet.atmosphere = nil
     planet.hillr = nil
     planet.flux = nil
+    planet.gravity = nil
+    planet.roche = nil
 
     planet.selected = false
 
@@ -141,7 +144,12 @@ function love.keypressed(key)
             elseif planet.mass == -1 and not textbox.hidden then
                 planet.mass = tonumber(textbox.content)
                 planet.radius = ((planet.mass) ^ 0.27) * 6.37e6
-                planet.escvel = ((2 * 6.67e-11 * (planet.mass * 5.97e24))/planet.radius) ^ 0.5
+                planet.escvel = (2 * 6.67e-11 * planet.mass * 5.97e24/planet.radius) ^ 0.5
+                local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
+                local temp = ((1-0.3)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4)
+                local thermspeed = math.sqrt((3 * boltz * temp)/5.31e-26)
+                planet.atmosphere = tostring((planet.escvel >= 6 * thermspeed))
+                planet.gravity = (6.67e-11 * planet.mass * 5.97e24)/(planet.radius^2)
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
                 maxscale = scale
                 camx,camy=0,0
@@ -291,6 +299,8 @@ function love.draw()
             love.graphics.print("Mass: " .. planet.mass * 5.97e24 .. " kg",info.x,300)
             love.graphics.print("Radius: " .. planet.radius .. " m",info.x,325)
             love.graphics.print("Escape Velocity: " .. planet.escvel .. " m/s",info.x,350)
+            love.graphics.print("Atmosphere?: " .. planet.atmosphere .. "",info.x,375)
+            love.graphics.print("Gravity: " .. planet.gravity .. " m/s^2",info.x,400)
         end
         --love.graphics.print("Mass: " .. string.format("%.3e", planet.mass) .. "kg",info.x,300)
         --love.graphics.print("Scale: " .. scale, info.x,275)
