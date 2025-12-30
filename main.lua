@@ -146,7 +146,6 @@ function love.keypressed(key)
                 planet.mass = tonumber(textbox.content)
                 planet.radius = ((planet.mass) ^ 0.27) * 6.37e6
                 planet.escvel = (2 * 6.67e-11 * planet.mass * 5.97e24/planet.radius) ^ 0.5
-                local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
                 local temp = planet.temp
                 local thermspeed = math.sqrt((3 * boltz * temp)/5.31e-26)
                 planet.atmosphere = tostring((planet.escvel >= 6 * thermspeed))
