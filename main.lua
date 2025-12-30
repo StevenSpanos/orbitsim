@@ -127,9 +127,10 @@ function love.keypressed(key)
             elseif planet.orbitradius == 0 then
                 if tonumber(textbox.content) ~= nil then
                 planet.orbitradius = tonumber(textbox.content) -- solar constant
-                local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
-                planet.tempmin = ((1-0.9)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation. Planetary Energy Balance Equation.
-                planet.tempmax =  ((1-0)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation again.
+                local S = star.luminosity
+                planet.temp = (( (1-0.3)*(S) ) / (16 * sigma * math.pi * (planet.orbitradius * 1.496e11)^2))^0.25 --big equation. Planetary Energy Balance Equation.
+                planet.temp = planet.temp - 273.15
+                --planet.tempmax =  ((1-0)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4) --big equation again.
                 planet.period = 2 * math.pi * math.sqrt(((planet.orbitradius * 1.496e11)^3) / (6.67e-11 * (star.mass * 1.989e30))) --Kepler's 3rd Law - P^2 = a^3
                 --planet.mass = (4 * math.pi^2 * ((planet.orbitradius * 1.495979e11)^3)) / (6.67e-11 * planet.period^2)
                 textbox.content = ""
@@ -146,7 +147,7 @@ function love.keypressed(key)
                 planet.radius = ((planet.mass) ^ 0.27) * 6.37e6
                 planet.escvel = (2 * 6.67e-11 * planet.mass * 5.97e24/planet.radius) ^ 0.5
                 local S = star.luminosity * 3.828e26 / (4 * math.pi * planet.orbitradius^2 * 1.496e11)
-                local temp = ((1-0.3)*(S)/(16 * math.pi * sigma * (planet.orbitradius * 1.496e11)^3))^(1/4)
+                local temp = planet.temp
                 local thermspeed = math.sqrt((3 * boltz * temp)/5.31e-26)
                 planet.atmosphere = tostring((planet.escvel >= 6 * thermspeed))
                 planet.gravity = (6.67e-11 * planet.mass * 5.97e24)/(planet.radius^2)
@@ -294,7 +295,7 @@ function love.draw()
         love.graphics.print("Planet:",info.x,200)
         love.graphics.print("Orbit Radius: " .. planet.orbitradius .. " AU / " .. string.format("%.3e", planet.orbitradius * 1.495979e8) .. "km",info.x,225)
         love.graphics.print("Period: " .. planet.period .. " years",info.x,250)
-        love.graphics.print("Temperature: [" .. string.format("%.2e", tostring(planet.tempmin)) .. ", " .. string.format("%.2e", tostring(planet.tempmax * 32 - 273.15)) .. "] Celsius",info.x,275)
+        love.graphics.print("Temperature: ".. planet.temp .. " Celsius",info.x,275)
         if planet.mass ~= -1 then
             love.graphics.print("Mass: " .. planet.mass * 5.97e24 .. " kg",info.x,300)
             love.graphics.print("Radius: " .. planet.radius .. " m",info.x,325)
