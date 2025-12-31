@@ -115,13 +115,13 @@ function love.keypressed(key)
                 if tonumber(textbox.content) ~= nil then
                     star.mass = tonumber(textbox.content)
                     star.luminosity = (star.mass ^ 3.5) * 3.828e26 --luminosity is proportional to mass ^ 3.5, times the luminosity of the Sun
-                    star.radius = (star.mass ^ 0.8) * 6.957e8 --radius is proportional to mass ^ 0.5, times radius of the Sun
+                    star.radius = (star.mass ^ 0.8) * 6.957e8 --radius is proportional to mass ^ 0.8, times radius of the Sun
                     star.temp = (star.luminosity / ((4 * math.pi) * (star.radius ^ 2) * sigma)) ^ (1/4) --rearranged Stefan-Boltzmann Law, L = 4 * pi * r^2 * sigma * T^2
                     star.class = specType(star.mass)
                     star.hzmin = math.sqrt((star.luminosity/3.828e26)/1.7) --minimum habitable zone
                     star.hzcons = math.sqrt((star.luminosity/3.828e26)/1.1) --conservative habitable zone
                     star.hzmax = math.sqrt((star.luminosity/3.828e26)/0.356) --maximum habitable zone
-                    star.lifetime = 10e9 * (star.mass ^ -2.5) --lifetime is proportional to mass ^ -2.5, multiplied by lifetime of the Sun
+                    star.lifetime = 1e10 * (star.mass ^ -2.5) --lifetime is proportional to mass ^ -2.5, multiplied by lifetime of the Sun
                     textbox.content = ""
                 end
             elseif planet.orbitradius == 0 then
@@ -145,9 +145,9 @@ function love.keypressed(key)
             elseif planet.mass == -1 and not textbox.hidden then
                 planet.mass = tonumber(textbox.content)
                 planet.radius = ((planet.mass) ^ 0.27) * 6.37e6
-                planet.escvel = (2 * 6.67e-11 * planet.mass * 5.97e24/planet.radius) ^ 0.5
-                local temp = planet.temp
-                local thermspeed = math.sqrt((3 * boltz * temp)/5.31e-26)
+                planet.escvel = ((2 * 6.67e-11 * planet.mass * 5.97e24)/planet.radius) ^ 0.5
+                local temp = planet.temp + 273.15
+                local thermspeed = math.sqrt((3 * boltz * temp)/4.65e-26) --Nitrogen used because of background pressure, lack of biological creation, and O2 and CO2 can be retained usually as well
                 planet.atmosphere = tostring((planet.escvel >= 6 * thermspeed))
                 planet.gravity = (6.67e-11 * planet.mass * 5.97e24)/(planet.radius^2)
                 scale = (math.min(window.width,window.height)*0.9/2) / (math.max(planet.orbitradius,star.hzmax))
@@ -351,7 +351,7 @@ function drawPlanet()
     local x = window.width/2 + math.cos(ang) * (planet.orbitradius*scale)
     local y = window.height/2 + math.sin(ang) * (planet.orbitradius*scale)
     love.graphics.circle("fill",x + camx,y + camy,5)
-    if love.mouse.isDown(1) and collision("point",{x=mouse.x,y=mouse.y},{x=x+camx,y=y+camy,width=50*(scale/maxscale),height=50*(scale/maxscale)}) then
+    if love.mouse.isDown(1) and collision("point",{x=mouse.x + camx,y=mouse.y+camy},{x=x,y=y,width=math.max(5,50*(scale/maxscale)),height=math.max(5,50*(scale/maxscale))}) then
         planet.selected = true
     end
     planet.x,planet.y = x,y
